@@ -4,22 +4,7 @@ from PyInquirer import prompt
 
 from examples import custom_style_3
 
-import platform
-
 from gDrive import *
-
-
-def switch_demo(argument):
-    switcher = {
-        "Darwin": "/",
-        "Linux": "/",
-        "Windows": "\\",
-    }
-
-    return switcher.get(argument, "Invalid Platform")
-
-
-PATH_SEPARATOR = switch_demo(platform.system())
 
 
 def dontUseOldPath(answers):
@@ -127,20 +112,26 @@ questions = [{
 answers2 = prompt(questions, style=custom_style_3)
 
 if answers1['pathToUpload'] and answers1['pathToUpload'] != "":
-    with open("savedPaths.txt") as usedPath:
-        listOfUsedPath = usedPath.readlines()
-        usedPath.close()
 
-        if answers1['pathToUpload'] + "\n" not in listOfUsedPath:
-            savedOldPaths = open("savedPaths.txt", "a").write(answers1['pathToUpload'] + "\n")
+    listOfUsedPath = []
+    if os.path.isfile('savedPaths.txt'):
+        with open("savedPaths.txt") as usedPath:
+            listOfUsedPath = usedPath.readlines()
+            usedPath.close()
+
+    if answers1['pathToUpload'] + "\n" not in listOfUsedPath:
+        savedOldPaths = open("savedPaths.txt", "a").write(answers1['pathToUpload'] + "\n")
 
 if answers1['driveId'] and answers1['driveId'] != "":
-    with open("savedDrives.txt") as usedDrives:
-        listOfUsedDrives = usedDrives.readlines()
-        usedDrives.close()
 
-        if answers1['driveId'] + "\n" not in listOfUsedDrives:
-            savedOldDrives = open("savedDrives.txt", "a").write(answers1['driveId'] + "\n")
+    listOfUsedDrives = []
+    if os.path.isfile('savedDrives.txt'):
+        with open("savedDrives.txt") as usedDrives:
+            listOfUsedDrives = usedDrives.readlines()
+            usedDrives.close()
+
+    if answers1['driveId'] + "\n" not in listOfUsedDrives:
+        savedOldDrives = open("savedDrives.txt", "a").write(answers1['driveId'] + "\n")
 
 indexDir = directories.index(answers2['drivePosition'])
 folderId = directoriesId[indexDir]
@@ -156,7 +147,8 @@ def fileUploader(fullPath, driveId, initialFolderId=""):
 
         folderId = checkFolderExist(pathName, initialFolderId, driveId)
 
-        if os.path.isdir(fullPath + PATH_SEPARATOR + item) and os.access(fullPath + PATH_SEPARATOR + item, os.X_OK | os.W_OK | os.R_OK):
+        if os.path.isdir(fullPath + PATH_SEPARATOR + item) and os.access(fullPath + PATH_SEPARATOR + item,
+                                                                         os.X_OK | os.W_OK | os.R_OK):
             fileUploader(fullPath + PATH_SEPARATOR + item, driveId, folderId)
         else:
             uploadFileInsideFolder(item, folderId, fullPath, driveId)

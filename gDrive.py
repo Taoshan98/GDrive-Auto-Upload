@@ -1,10 +1,24 @@
 import os
+import platform
 
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 
 gAuth = GoogleAuth()
 drive = GoogleDrive(gAuth)
+
+
+def switch_demo(argument):
+    switcher = {
+        "Darwin": "/",
+        "Linux": "/",
+        "Windows": "\\",
+    }
+
+    return switcher.get(argument, "Invalid Platform")
+
+
+PATH_SEPARATOR = switch_demo(platform.system())
 
 
 # Crea Cartella verificando se è una root oppure una subdir
