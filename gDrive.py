@@ -1,5 +1,7 @@
 import os
 import platform
+import datetime
+from datetime import datetime
 
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
@@ -105,6 +107,19 @@ def uploadFileInsideFolder(fileName, folderId, fullPath, driveId=""):
     if fileName not in files:
 
         if fileName != "desktop.ini" or fileName != ".DS_Store":
+            file = drive.CreateFile({'title': fileName, "parents": [{"kind": "drive#fileLink", "id": folderId}]})
+            file.SetContentFile(fullPath + PATH_SEPARATOR + fileName)
+
+            file.Upload()
+            return True
+    else:
+
+        keyFileInList = files.index(fileName)
+
+        tsOnDrive = datetime.timestamp(datetime.strptime(listOfFiles[keyFileInList]['modifiedDate'], '%Y-%m-%dT%H:%M:%S.%fZ'))
+        tsOfFile = os.path.getmtime(fullPath + PATH_SEPARATOR + fileName)
+
+        if tsOfFile > tsOnDrive:
             file = drive.CreateFile({'title': fileName, "parents": [{"kind": "drive#fileLink", "id": folderId}]})
             file.SetContentFile(fullPath + PATH_SEPARATOR + fileName)
 

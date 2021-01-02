@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals
 from PyInquirer import prompt
 
 from examples import custom_style_3
+import time
 
 from gDrive import *
 
@@ -137,21 +138,59 @@ indexDir = directories.index(answers2['drivePosition'])
 folderId = directoriesId[indexDir]
 
 
+# Print iterations progress
+def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\n"):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
+    # Print New Line on Complete
+    if iteration == total:
+        print()
+
+
 # Funzione ricorsiva principale, crea le cartelle, e fa l'upload dei file
-def fileUploader(fullPath, driveId, initialFolderId=""):
+def fileUploader(fullPath, driveId, initialFolderId="", i=1):
     pathName = os.path.basename(os.path.normpath(fullPath))
 
-    for item in os.listdir(fullPath):
+    itemsInFolderList = os.listdir(fullPath)
+    listLen = len(itemsInFolderList)
 
-        print(fullPath + PATH_SEPARATOR + item)
+    if initialFolderId == "":
+        printProgressBar(0, listLen, prefix='Progress:', suffix='Complete', length=50)
+    else:
+        i = i
+
+    for item in itemsInFolderList:
 
         folderId = checkFolderExist(pathName, initialFolderId, driveId)
 
         if os.path.isdir(fullPath + PATH_SEPARATOR + item) and os.access(fullPath + PATH_SEPARATOR + item,
                                                                          os.X_OK | os.W_OK | os.R_OK):
-            fileUploader(fullPath + PATH_SEPARATOR + item, driveId, folderId)
+            i = fileUploader(fullPath + PATH_SEPARATOR + item, driveId, folderId, i)
+
         else:
+            # Update Progress Bar
+            time.sleep(0.1)
+            printProgressBar(i, listLen, prefix='Uploading ' + item + ' Progress:', suffix='Complete', length=50)
+
             uploadFileInsideFolder(item, folderId, fullPath, driveId)
+
+        i += 1
+
+    return i
 
 
 if __name__ == "__main__":
