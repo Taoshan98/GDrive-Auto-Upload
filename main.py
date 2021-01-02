@@ -12,6 +12,7 @@ from gDrive import *
 def switch_demo(argument):
     switcher = {
         "Darwin": "/",
+        "Linux": "/",
         "Windows": "\\",
     }
 
