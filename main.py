@@ -4,7 +4,21 @@ from PyInquirer import prompt
 
 from examples import custom_style_3
 
+import platform
+
 from gDrive import *
+
+
+def switch_demo(argument):
+    switcher = {
+        "Darwin": "/",
+        "Windows": "\\",
+    }
+
+    return switcher.get(argument, "Invalid Platform")
+
+
+PATH_SEPARATOR = switch_demo(platform.system())
 
 
 def dontUseOldPath(answers):
@@ -49,7 +63,7 @@ else:
         {
             'type': 'input',
             'name': 'driveId',
-            'message': 'insert the Drive id. Else leave empty.',
+            'message': 'Insert the Drive id or leave empty.',
             'when': dontUseOldDrive
         }
     ]
@@ -137,12 +151,12 @@ def fileUploader(fullPath, driveId, initialFolderId=""):
 
     for item in os.listdir(fullPath):
 
-        print(fullPath + "\\" + item)
+        print(fullPath + PATH_SEPARATOR + item)
 
         folderId = checkFolderExist(pathName, initialFolderId, driveId)
 
-        if os.path.isdir(fullPath + "\\" + item) and os.access(fullPath + "\\" + item, os.X_OK | os.W_OK | os.R_OK):
-            fileUploader(fullPath + "\\" + item, driveId, folderId)
+        if os.path.isdir(fullPath + PATH_SEPARATOR + item) and os.access(fullPath + PATH_SEPARATOR + item, os.X_OK | os.W_OK | os.R_OK):
+            fileUploader(fullPath + PATH_SEPARATOR + item, driveId, folderId)
         else:
             uploadFileInsideFolder(item, folderId, fullPath, driveId)
 

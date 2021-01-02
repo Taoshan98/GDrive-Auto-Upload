@@ -4,7 +4,6 @@ from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 
 gAuth = GoogleAuth()
-gAuth.LocalWebserverAuth()
 drive = GoogleDrive(gAuth)
 
 
@@ -93,7 +92,7 @@ def uploadFileInsideFolder(fileName, folderId, fullPath, driveId=""):
 
         if fileName != "desktop.ini" or fileName != ".DS_Store":
             file = drive.CreateFile({'title': fileName, "parents": [{"kind": "drive#fileLink", "id": folderId}]})
-            file.SetContentFile(fullPath + "\\" + fileName)
+            file.SetContentFile(fullPath + PATH_SEPARATOR + fileName)
 
             file.Upload()
             return True
