@@ -24,7 +24,7 @@ if not os.path.isfile('savedDrives.txt'):
     questions = [{
         'type': 'input',
         'name': 'driveId',
-        'message': 'If you want to upload the directory to a specific Drive, insert the Drive id. Else leave empty.'
+        'message': 'If you want to upload the directory to a specific Drive, insert the Drive id, else leave empty.'
     }]
 else:
 
