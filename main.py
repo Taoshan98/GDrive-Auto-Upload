@@ -121,7 +121,9 @@ if answers1['pathToUpload'] and answers1['pathToUpload'] != "":
             usedPath.close()
 
     if answers1['pathToUpload'] + "\n" not in listOfUsedPath:
-        savedOldPaths = open("savedPaths.txt", "a").write(answers1['pathToUpload'] + "\n")
+        savedOldPaths = open("savedPaths.txt", "a")
+        savedOldPaths.write(answers1['pathToUpload'] + "\n")
+        savedOldPaths.close()
 
 if answers1['driveId'] and answers1['driveId'] != "":
 
@@ -132,68 +134,38 @@ if answers1['driveId'] and answers1['driveId'] != "":
             usedDrives.close()
 
     if answers1['driveId'] + "\n" not in listOfUsedDrives:
-        savedOldDrives = open("savedDrives.txt", "a").write(answers1['driveId'] + "\n")
+        savedOldDrives = open("savedDrives.txt", "a")
+        savedOldDrives.write(answers1['driveId'] + "\n")
+        savedOldDrives.close()
 
 indexDir = directories.index(answers2['drivePosition'])
 folderId = directoriesId[indexDir]
 
 
-# Print iterations progress
-def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\n"):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
-    # Print New Line on Complete
-    if iteration == total:
-        print()
-
-
 # Funzione ricorsiva principale, crea le cartelle, e fa l'upload dei file
-def fileUploader(fullPath, driveId, initialFolderId="", i=1):
+def fileUploader(fullPath, driveId, initialFolderId=""):
     pathName = os.path.basename(os.path.normpath(fullPath))
 
     itemsInFolderList = os.listdir(fullPath)
-    listLen = len(itemsInFolderList)
-
-    if initialFolderId == "":
-        printProgressBar(0, listLen, prefix='Progress:', suffix='Complete', length=50)
-    else:
-        i = i
 
     for item in itemsInFolderList:
 
-        folderId = checkFolderExist(pathName, initialFolderId, driveId)
+        if item[0] == "." or item == "desktop.ini" or item == ".DS_Store":
+            print(item)
+            continue
+
+        idFolder = checkFolderExist(pathName, initialFolderId, driveId)
 
         if os.path.isdir(fullPath + PATH_SEPARATOR + item) and os.access(fullPath + PATH_SEPARATOR + item,
                                                                          os.X_OK | os.W_OK | os.R_OK):
-            i = fileUploader(fullPath + PATH_SEPARATOR + item, driveId, folderId, i)
+            fileUploader(fullPath + PATH_SEPARATOR + item, driveId, idFolder)
 
         else:
-            # Update Progress Bar
-            time.sleep(0.1)
-            printProgressBar(i, listLen, prefix='Uploading ' + item + ' Progress:', suffix='Complete', length=50)
 
-            uploadFileInsideFolder(item, folderId, fullPath, driveId)
+            print(fullPath + PATH_SEPARATOR + item)
 
-        i += 1
-
-    return i
+            uploadFileInsideFolder(item, idFolder, fullPath, driveId)
 
 
 if __name__ == "__main__":
     fileUploader(answers1['pathToUpload'], answers1['driveId'], folderId)
-
-# 0AB_CrG3NhQk-Uk9PVA

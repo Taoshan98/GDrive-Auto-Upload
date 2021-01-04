@@ -7,6 +7,7 @@ from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 
 gAuth = GoogleAuth()
+gAuth.LocalWebserverAuth()
 drive = GoogleDrive(gAuth)
 
 
@@ -32,6 +33,7 @@ def createFolder(folderName, parentFolderId):
                                    "parents": [{"id": parentFolderId}]})
 
     folder.Upload()
+
     return folder['id']
 
 
@@ -66,18 +68,25 @@ def getFolderList(folderId, driveId):
     ).GetList()
 
 
+foldersInFolderList = {}
+
+
 # Verifica se una cartella esiste, eventualmente la crea
 def checkFolderExist(folderName, parentFolderId="", driveId=""):
-    listOfFolders = getFolderList(parentFolderId, driveId)
+    global foldersInFolderList
 
-    folderNames = list(map(lambda x: x["title"], listOfFolders))
+    if folderName not in foldersInFolderList:
+        listOfFolders = getFolderList(parentFolderId, driveId)
+        foldersInFolderList[parentFolderId] = listOfFolders
+    else:
+        listOfFolders = foldersInFolderList.get(parentFolderId)
+
+    folderNamesList = [title.get('title') for title in listOfFolders]
 
     currentFolder = ""
 
-    try:
-        currentFolder = folderNames.index(folderName)
-    except ValueError:
-        pass
+    if folderName in folderNamesList:
+        currentFolder = folderNamesList.index(folderName)
 
     if currentFolder != "":
         return listOfFolders[currentFolder]['id']
@@ -85,45 +94,61 @@ def checkFolderExist(folderName, parentFolderId="", driveId=""):
     return createFolder(folderName, parentFolderId)
 
 
+def uploadFile(fileName, fullPath, folderId):
+    file = drive.CreateFile({'title': fileName, "parents": [{"kind": "drive#fileLink", "id": folderId}]})
+    file.SetContentFile(fullPath + PATH_SEPARATOR + fileName)
+
+    try:
+        file.Upload()
+    except ValueError:
+        print("Error During Upload File: " + fullPath + PATH_SEPARATOR + fileName)
+
+
+foldersContentList = {}
+
+
 # Upload del file nella cartella di destinazione
 def uploadFileInsideFolder(fileName, folderId, fullPath, driveId=""):
-    if driveId != "":
+    global foldersContentList
 
-        listOfFiles = drive.ListFile(
-            {
-                'q': "'" + folderId + "' in parents and trashed=false",
-                'corpora': 'teamDrive',
-                'teamDriveId': driveId,
-                'includeTeamDriveItems': True,
-                'supportsTeamDrives': True
-            }
-        ).GetList()
+    if folderId not in foldersContentList:
+
+        if driveId != "":
+
+            listOfFiles = drive.ListFile(
+                {
+                    'q': "'" + folderId + "' in parents and trashed=false",
+                    'corpora': 'teamDrive',
+                    'teamDriveId': driveId,
+                    'includeTeamDriveItems': True,
+                    'supportsTeamDrives': True
+                }
+            ).GetList()
+
+        else:
+            listOfFiles = drive.ListFile({'q': "'" + folderId + "' in parents and trashed=false"}).GetList()
+
+        foldersContentList[folderId] = listOfFiles
 
     else:
-        listOfFiles = drive.ListFile({'q': "'" + folderId + "' in parents and trashed=false"}).GetList()
+        listOfFiles = foldersContentList.get(folderId)
 
-    files = list(map(lambda x: x["title"], listOfFiles))
+    files = [title.get('title') for title in listOfFiles]
 
     if fileName not in files:
+        uploadFile(fileName, fullPath, folderId)
+        return True
 
-        if fileName != "desktop.ini" or fileName != ".DS_Store":
-            file = drive.CreateFile({'title': fileName, "parents": [{"kind": "drive#fileLink", "id": folderId}]})
-            file.SetContentFile(fullPath + PATH_SEPARATOR + fileName)
-
-            file.Upload()
-            return True
     else:
 
         keyFileInList = files.index(fileName)
 
-        tsOnDrive = datetime.timestamp(datetime.strptime(listOfFiles[keyFileInList]['modifiedDate'], '%Y-%m-%dT%H:%M:%S.%fZ'))
+        tsOnDrive = datetime.timestamp(
+            datetime.strptime(listOfFiles[keyFileInList]['modifiedDate'], '%Y-%m-%dT%H:%M:%S.%fZ'))
         tsOfFile = os.path.getmtime(fullPath + PATH_SEPARATOR + fileName)
 
         if tsOfFile > tsOnDrive:
-            file = drive.CreateFile({'title': fileName, "parents": [{"kind": "drive#fileLink", "id": folderId}]})
-            file.SetContentFile(fullPath + PATH_SEPARATOR + fileName)
-
-            file.Upload()
+            uploadFile(fileName, fullPath, folderId)
             return True
 
     return False
