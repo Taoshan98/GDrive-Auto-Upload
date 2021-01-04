@@ -77,7 +77,7 @@ def checkFolderExist(folderName, parentFolderId="", driveId=""):
 
     if folderName not in foldersInFolderList:
         listOfFolders = getFolderList(parentFolderId, driveId)
-        foldersInFolderList[parentFolderId] = listOfFolders
+        foldersInFolderList[driveId if parentFolderId == "" else parentFolderId] = listOfFolders
     else:
         listOfFolders = foldersInFolderList.get(parentFolderId)
 
