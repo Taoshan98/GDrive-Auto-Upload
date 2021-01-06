@@ -103,14 +103,26 @@ directories.insert(0, rootFolder)
 directoriesId = list(map(lambda x: x["id"], folderList))
 directoriesId.insert(0, rootFolder)
 
-questions = [{
-    'type': 'list',
-    'name': 'drivePosition',
-    'message': 'Where you want to upload',
-    'choices': directories
-}]
+folderElementList = []
+for folderElement in os.listdir(answers1['pathToUpload']):
+    folderElementList.append({'name': folderElement})
+
+questions = [
+    {
+        'type': 'checkbox',
+        'name': 'pathsToExclude',
+        'message': 'Do you want remove some of this elements from the upload?',
+        'choices': folderElementList
+    },
+    {
+        'type': 'list',
+        'name': 'drivePosition',
+        'message': 'Where you want to upload',
+        'choices': directories
+    }]
 
 answers2 = prompt(questions, style=custom_style_3)
+
 
 if answers1['pathToUpload'] and answers1['pathToUpload'] != "":
 
@@ -143,29 +155,37 @@ folderId = directoriesId[indexDir]
 
 
 # Funzione ricorsiva principale, crea le cartelle, e fa l'upload dei file
-def fileUploader(fullPath, driveId, initialFolderId=""):
+def fileUploader(fullPath, driveId, pathsToExclude, initialFolderId="", i=1):
     pathName = os.path.basename(os.path.normpath(fullPath))
 
     itemsInFolderList = os.listdir(fullPath)
 
+    if i > 1:
+        i = i
+
     for item in itemsInFolderList:
 
-        if item[0] == "." or item == "desktop.ini" or item == ".DS_Store":
+        if item[0] == "." or item == "desktop.ini" or item == ".DS_Store" or item in pathsToExclude:
             print(item)
+            i += 1
             continue
 
         idFolder = checkFolderExist(pathName, initialFolderId, driveId)
 
         if os.path.isdir(fullPath + PATH_SEPARATOR + item) and os.access(fullPath + PATH_SEPARATOR + item,
                                                                          os.X_OK | os.W_OK | os.R_OK):
-            fileUploader(fullPath + PATH_SEPARATOR + item, driveId, idFolder)
+            i = fileUploader(fullPath + PATH_SEPARATOR + item, driveId, pathsToExclude, idFolder, i)
 
         else:
 
-            print(fullPath + PATH_SEPARATOR + item)
+            print(fullPath + PATH_SEPARATOR + item + " " + str(i))
 
             uploadFileInsideFolder(item, idFolder, fullPath, driveId)
 
+            i += 1
+
+    return i
+
 
 if __name__ == "__main__":
-    fileUploader(answers1['pathToUpload'], answers1['driveId'], folderId)
+    fileUploader(answers1['pathToUpload'], answers1['driveId'], answers2['pathsToExclude'], folderId)

@@ -75,6 +75,8 @@ foldersInFolderList = {}
 def checkFolderExist(folderName, parentFolderId="", driveId=""):
     global foldersInFolderList
 
+    # ''' 5 min 615
+
     if folderName not in foldersInFolderList:
         listOfFolders = getFolderList(parentFolderId, driveId)
         foldersInFolderList[driveId if parentFolderId == "" else parentFolderId] = listOfFolders
@@ -87,6 +89,22 @@ def checkFolderExist(folderName, parentFolderId="", driveId=""):
 
     if folderName in folderNamesList:
         currentFolder = folderNamesList.index(folderName)
+
+    # '''
+
+    ''' 5min 610
+    listOfFolders = getFolderList(parentFolderId, driveId)
+
+    folderNamesList = [title.get('title') for title in listOfFolders]
+
+    currentFolder = ""
+
+    try:
+        currentFolder = folderNamesList.index(folderName)
+    except ValueError:
+        pass
+
+    '''
 
     if currentFolder != "":
         return listOfFolders[currentFolder]['id']
